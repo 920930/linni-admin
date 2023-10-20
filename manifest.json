@@ -1,7 +1,7 @@
 {
-    "name" : "邻你admin",
+    "name" : "邻你物流管理端",
     "appid" : "__UNI__AABAC30",
-    "description" : "",
+    "description" : "邻你物流WEB管理端",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,
