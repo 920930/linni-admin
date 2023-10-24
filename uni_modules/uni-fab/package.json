@@ -1,18 +1,18 @@
 {
-  "id": "uni-data-checkbox",
-  "displayName": "uni-data-checkbox 数据选择器",
-  "version": "1.0.3",
-  "description": "通过数据驱动的单选框和复选框",
+  "id": "uni-fab",
+  "displayName": "uni-fab 悬浮按钮",
+  "version": "1.2.5",
+  "description": "悬浮按钮 fab button ，点击可展开一个图标按钮菜单。",
   "keywords": [
     "uni-ui",
-    "checkbox",
-    "单选",
-    "多选",
-    "单选多选"
+    "uniui",
+    "按钮",
+    "悬浮按钮",
+    "fab"
 ],
   "repository": "https://github.com/dcloudio/uni-ui",
   "engines": {
-    "HBuilderX": "^3.1.1"
+    "HBuilderX": ""
   },
   "directories": {
     "example": "../../temps/example_temps"
@@ -38,7 +38,7 @@
     "type": "component-vue"
   },
   "uni_modules": {
-    "dependencies": ["uni-load-more","uni-scss"],
+    "dependencies": ["uni-scss","uni-icons"],
     "encrypt": [],
     "platforms": {
       "cloud": {
