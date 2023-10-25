@@ -1,116 +1,92 @@
 <template>
-  <view class="container">
-    <unicloud-db ref="udb" v-slot:default="{data, loading, error, options}" :options="options" :collection="collectionList" field="title,mobile,genre,time,room" :where="queryWhere" :getone="true" :manual="true">
-      <view v-if="error">{{error.message}}</view>
-      <view v-else-if="loading">
-        <uni-load-more :contentText="loadMore" status="loading"></uni-load-more>
-      </view>
-      <view v-else-if="data">
-        <view>
-          <text>title</text>
-          <text>{{data.title}}</text>
-        </view>
-        <view>
-          <text>mobile</text>
-          <text>{{data.mobile}}</text>
-        </view>
-        <view>
-          <text>genre</text>
-          <text>{{data.genre}}</text>
-        </view>
-        <view>
-          <text>time</text>
-          <text>{{data.time}}</text>
-        </view>
-        <view>
-          <text>room</text>
-          <text>{{data.room}}</text>
-        </view>
-      </view>
-    </unicloud-db>
-    <view class="btns">
-      <button type="primary" @click="handleUpdate">修改</button>
-      <button type="warn" class="btn-delete" @click="handleDelete">删除</button>
-    </view>
-  </view>
+	<view v-if="site" class="site">
+		<view class="site-title site-border">{{site.title}}</view>
+		<view class="site-border">{{site.ftitle}}</view>
+		<view class="site-border">{{site.mobile}}</view>
+		<view class="site-border">
+			<text>车型</text>
+			<view class="site-flex" style="margin-top: 20rpx;">
+				<uni-tag :text="item" inverted v-for="item in site.genre" :key="item" />
+			</view>
+		</view>
+		<view class="site-border">
+			<text>可预约时间</text>
+			<view class="site-flex" style="margin-top: 20rpx;">
+				<uni-tag :text="`时间: ${item.start} - ${item.end} 车辆量: ${item.num}`" inverted v-for="item in site.times" :key="item.id" />
+			</view>
+		</view>
+		<view class="site-border">
+			<text>月台编号</text>
+			<view class="site-flex" style="margin-top: 20rpx;">
+				<uni-tag :text="`${door.value}号月台 状态: ${door.state ? '正常' : '关闭'}`" inverted v-for="door in site.doors" :key="door.id" />
+			</view>
+		</view>
+		<view class="uni-button-group">
+			<button type="primary" class="uni-button" @click="edit">编辑</button>
+			<button type="warn" class="uni-button" @click="submit">返回</button>
+		</view>
+	</view>
 </template>
 
-<script>
-  // 由schema2code生成，包含校验规则和enum静态数据
-  import { enumConverter } from '../../js_sdk/validator/website.js'
-  const db = uniCloud.database()
-
-  export default {
-    data() {
-      return {
-        queryWhere: '',
-        collectionList: "website",
-        loadMore: {
-          contentdown: '',
-          contentrefresh: '',
-          contentnomore: ''
-        },
-        options: {
-          // 将scheme enum 属性静态数据中的value转成text
-          ...enumConverter
-        }
-      }
-    },
-    onLoad(e) {
-      this._id = e.id
-    },
-    onReady() {
-      if (this._id) {
-        this.queryWhere = '_id=="' + this._id + '"'
-      }
-    },
-    methods: {
-      handleUpdate() {
-        // 打开修改页面
-        uni.navigateTo({
-          url: './edit?id=' + this._id,
-          events: {
-            // 监听修改页面成功修改数据后, 刷新当前页面数据
-            refreshData: () => {
-              this.$refs.udb.loadData({
-                clear: true
-              })
-            }
-          }
-        })
-      },
-      handleDelete() {
-        this.$refs.udb.remove(this._id, {
-          success: (res) => {
-            // 删除数据成功后跳转到list页面
-            uni.navigateTo({
-              url: './list'
-            })
-          }
-        })
-      }
-    }
-  }
+<script setup>
+	import { ref } from 'vue';
+	import { onLoad } from "@dcloudio/uni-app"
+	const db = uniCloud.importObject('website');
+	const site = ref();
+	const getOne = async (id) => {
+		try{
+			const { data } = await db.show(id);
+			site.value = data;
+			console.log(data)
+		}catch(e){
+			uni.showToast({
+				title: '异常'
+			})
+		}
+	}
+	
+	onLoad(e => {
+		if(e.id) getOne(e.id)
+	})
+	const submit = () => {
+		uni.navigateTo({
+			url: `/pages/website/list`
+		})
+	}
+	const edit = () => {
+		uni.navigateTo({
+			url: `/pages/website/edit?id=${site.value._id}`
+		})
+	}
 </script>
 
-<style>
-  .container {
-    padding: 10px;
-  }
-
-  .btns {
-    margin-top: 10px;
-    /* #ifndef APP-NVUE */
-    display: flex;
-    /* #endif */
-    flex-direction: row;
-  }
-
-  .btns button {
-    flex: 1;
-  }
-
-  .btn-delete {
-    margin-left: 10px;
-  }
+<style lang="scss" scoped>
+	.site{
+		padding: 30rpx;
+		&-border{
+			border-bottom: 1rpx solid rgba(0, 0, 0, 0.1);
+			margin-bottom: 20rpx;
+			padding: 10rpx;
+		}
+		&-title{
+			font-size: 40rpx;
+		}
+		&-flex{
+			display: flex;
+			flex-wrap: wrap;
+			gap: 20rpx;
+		}
+	}
+	.uni-button-group {
+	  margin-top: 50px;
+	  /* #ifndef APP-NVUE */
+	  display: flex;
+	  /* #endif */
+	  justify-content: center;
+		gap: 20rpx;
+	}
+	
+	.uni-button {
+	  width: 184px;
+	}
 </style>

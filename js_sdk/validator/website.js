@@ -5,15 +5,30 @@ const validator = {
   "title": {
     "rules": [
       {
-        "required": true
+        "required": true,
       },
       {
         "format": "string"
       }
-    ]
+    ],
+    "label": "公司简称"
+  },
+  "ftitle": {
+    "rules": [
+      {
+        "required": true,
+      },
+      {
+        "format": "string"
+      }
+    ],
+    "label": "公司全称"
   },
   "mobile": {
     "rules": [
+			{
+        "required": true,
+      },
       {
         "format": "string"
       }
@@ -21,24 +36,36 @@ const validator = {
   },
   "genre": {
     "rules": [
+			{
+			  "required": true,
+			},
       {
         "format": "array"
       }
-    ]
+    ],
+    "label": "送货类型"
   },
-  "time": {
+  "times": {
     "rules": [
+			{
+			  "required": true,
+			},
       {
         "format": "array"
       }
-    ]
+    ],
+    "label": "送货时间"
   },
-  "room": {
+  "doors": {
     "rules": [
+			{
+			  "required": true,
+			},
       {
         "format": "array"
       }
-    ]
+    ],
+    "label": "仓门月台"
   }
 }
 

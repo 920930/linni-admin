@@ -2,15 +2,22 @@
   <view class="uni-container">
     <uni-forms ref="form" :model="formData" label-position="top" validate-trigger="submit" err-show-type="toast">
       <uni-forms-item name="title" label="公司简称" required>
-        <uni-easyinput placeholder="公司名称" v-model="formData.title" trim="both"></uni-easyinput>
+        <uni-easyinput placeholder="公司名称" v-model="formData.title" trim="both" />
       </uni-forms-item>
+			<uni-forms-item name="ftitle" label="公司全称" required>
+			  <uni-easyinput placeholder="公司名称" v-model="formData.ftitle" trim="both" />
+			</uni-forms-item>
       <uni-forms-item name="mobile" label="公司电话" required>
         <uni-easyinput placeholder="公司电话" v-model="formData.mobile" trim="both"></uni-easyinput>
       </uni-forms-item>
-      <!-- <uni-forms-item name="genre">
-        <uni-data-checkbox :multiple="true" v-model="formData.genre"></uni-data-checkbox>
-      </uni-forms-item> -->
-      <uni-forms-item name="time" label="开放时间">
+      <uni-forms-item name="genre" label="运货类型">
+				<button type="primary" size="mini" @click="() => genreRef.open()">添加运货类型</button>
+				<view style="display: flex; gap: 20rpx; flex-wrap: wrap; margin-top: 20rpx;">
+					<uni-tag :text="item" inverted type="primary" v-for="item in formData.genre" :key="item" @click="delGenre(item)" />
+				</view>
+				<view v-model="formData.genre" />
+      </uni-forms-item>
+      <uni-forms-item name="times" label="开放时间">
 				<button type="primary" size="mini" @tap="editTimeFn(0)" style="margin-bottom: 20rpx;">添加时间</button>
 				<view class="timelist">
 					<view class="timelist-item" v-for="item in formData.times" :key="item.id">
@@ -18,23 +25,24 @@
 						<uni-tag :text="`车辆量: ${item.num}`" inverted type="success" />
 						<view class="timelist-item-r">
 							<uni-icons type="compose" size="20" style="cursor: pointer;" @click="editTimeFn(item.id)" />
-							<uni-icons type="trash" size="20" style="cursor: pointer;" />
+							<uni-icons type="trash" size="20" style="cursor: pointer;" @click="delTimeFn(item.id)" />
 						</view>
 					</view>
 				</view>
+				<view v-model="formData.times" />
       </uni-forms-item>
-      <uni-forms-item name="room" label="月台仓门">
+      <uni-forms-item name="doors" label="月台仓门">
 				<button type="primary" size="mini" @tap="editDoorFn(0)" style="margin-bottom: 20rpx;">添加月台仓门</button>
 				<view class="timelist">
 					<view class="timelist-item" v-for="door in formData.doors" :key="door.id">
 						<uni-tag :text="`${door.value}号月台 状态: ${door.state ? '正常' : '关闭'}`" inverted :type="`${door.state ? 'success': 'error'}`" />
 						<view class="timelist-item-r">
 							<uni-icons type="compose" size="20" @click="editDoorFn(door.id)" style="cursor: pointer;" />
-							<uni-icons type="trash" size="20" style="cursor: pointer;" />
+							<uni-icons type="trash" size="20" style="cursor: pointer;" @click="delDoorFn(door.id)" />
 						</view>
 					</view>
 				</view>
-        <uni-data-checkbox :multiple="true" v-model="formData.room"></uni-data-checkbox>
+				<view v-model="formData.doors" />
       </uni-forms-item>
       <view class="uni-button-group">
         <button type="primary" class="uni-button" @click="submit">提交</button>
@@ -42,20 +50,28 @@
     </uni-forms>
 		<TimePick ref="timepickRef" v-bind="editTime" @pushTime="pushTime" />
 		<DoorPick ref="doorpickRef" v-bind="editDoor" @pushDoor="pushDoor"  />
+		<uni-popup ref="genreRef" type="dialog">
+			<uni-popup-dialog mode="input" message="成功消息" :duration="2000" :before-close="true" @confirm="genreConfirm" />
+		</uni-popup>
   </view>
 </template>
 
 <script setup>
 	import { reactive, ref } from 'vue';
-	import { onReady } from "@dcloudio/uni-app";
+	import { onReady } from '@dcloudio/uni-app';
 	import TimePick from '../../components/web/time-pick.vue';
 	import DoorPick from '../../components/web/door-pick.vue';
+	import { validator } from '../../js_sdk/validator/website.js';
+	
+	const db = uniCloud.importObject('website')
 	const form = ref();
 	const timepickRef = ref();
 	const doorpickRef = ref();
+	const genreRef = ref();
 	
 	const formData = reactive({
 		title: "",
+		ftitle: "",
 		mobile: "",
 		genre: [],
 		times: [],
@@ -112,9 +128,23 @@
 	}
 	
 	const submitForm = (value) => {
-		console.log(formData)
+		db.store(value)
 	}
-		
+	
+	function getValidator(fields) {
+	  let result = {}
+	  for (let key in validator) {
+	    if (fields.indexOf(key) > -1) {
+	      result[key] = validator[key]
+	    }
+	  }
+	  return result
+	}
+	const rules = ref({...getValidator(Object.keys(formData))});
+	onReady(() => {
+		form.value.setRules(rules.value);
+	})
+	
 	const pushTime = e => {
 		let one = formData.times.find(item => item.id === e.id);
 		let two = formData.times.find(item => item.start === e.start);
@@ -166,6 +196,49 @@
 			formData.doors.push({...e})
 		}
 		formData.doors.sort((a, b) => a.value - b.value)
+	}
+	const genreConfirm = e => {
+		const bool = formData.genre.includes(e);
+		if(bool) {
+			return uni.showToast({
+				title: "已存在",
+				icon: "none",
+				duration: 3000,
+			})
+		}
+		formData.genre.push(e);
+		genreRef.value.close();
+	}
+	const delGenre = (key) => {
+		uni.showModal({
+			title: `确定要删除${key}吗？`,
+			content: '删除后新增数据即可',
+			success(res) {
+				if(res.confirm){
+					formData.genre = formData.genre.filter(item => item != key)
+				}
+			}
+		})
+	}
+	const delTimeFn = (id) => {
+		uni.showModal({
+			title: '确认删除吗',
+			success(e) {
+				if(e.confirm) {
+					formData.times = formData.times.filter(item => item.id !== id)
+				}
+			}
+		})
+	}
+	const delDoorFn = (id) => {
+		uni.showModal({
+			title: '确认删除吗',
+			success(e) {
+				if(e.confirm) {
+					formData.doors = formData.doors.filter(door => door.id !== id)
+				}
+			}
+		})
 	}
 </script>
 

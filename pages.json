@@ -159,7 +159,7 @@
 		}, {
 			"path": "pages/website/detail",
 			"style": {
-				"navigationBarTitleText": "详情"
+				"navigationBarTitleText": "网站详情"
 			}
 		}
 	],
