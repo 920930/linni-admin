@@ -1,8 +1,8 @@
 <template>
 	<view v-if="site" class="site">
-		<view class="site-title site-border">{{site.title}}</view>
-		<view class="site-border">{{site.ftitle}}</view>
-		<view class="site-border">{{site.mobile}}</view>
+		<view class="site-title site-border">公司简称：{{site.title}}</view>
+		<view class="site-border">公司全称：{{site.ftitle}}</view>
+		<view class="site-border">公司电话：{{site.mobile}}</view>
 		<view class="site-border">
 			<text>车型</text>
 			<view class="site-flex" style="margin-top: 20rpx;">
