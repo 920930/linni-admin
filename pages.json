@@ -144,17 +144,17 @@
 		}, {
 			"path": "pages/website/add",
 			"style": {
-				"navigationBarTitleText": "新增"
+				"navigationBarTitleText": "网站新增"
 			}
 		}, {
 			"path": "pages/website/edit",
 			"style": {
-				"navigationBarTitleText": "编辑"
+				"navigationBarTitleText": "网站编辑"
 			}
 		}, {
 			"path": "pages/website/list",
 			"style": {
-				"navigationBarTitleText": "列表"
+				"navigationBarTitleText": "网站列表"
 			}
 		}, {
 			"path": "pages/website/detail",
@@ -162,7 +162,31 @@
 				"navigationBarTitleText": "网站详情"
 			}
 		}
-	],
+	,{
+    "path": "pages/webnotice/add",
+    "style": {
+        "navigationBarTitleText": "通知新增"
+    }
+}
+,{
+    "path": "pages/webnotice/edit",
+    "style": {
+        "navigationBarTitleText": "通知编辑"
+    }
+}
+,{
+    "path": "pages/webnotice/list",
+    "style": {
+        "navigationBarTitleText": "通知列表"
+    }
+}
+,{
+    "path": "pages/webnotice/detail",
+    "style": {
+        "navigationBarTitleText": "通知详情"
+    }
+}
+],
 	"subPackages": [{
 			"root": "pages/system",
 			"pages": [{
