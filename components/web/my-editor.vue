@@ -21,21 +21,30 @@
 		:show-img-size="true"
 		:show-img-toolbar="true"
 		:show-img-resize="true"
+		@input="editorFn"
 	/>
 </template>
 
 <script lang='ts' setup>
 import { ref } from 'vue';
+const props = defineProps(['modelValue'])
+const emits = defineEmits(['update:modelValue'])
+const editorCtx = ref();
+const files = ref([]);
 
-const editorCtx = ref()
 const onEditorReady = () => {
 	// #ifdef APP-PLUS || H5 ||MP-WEIXIN
 	uni.createSelectorQuery().select('#editor').context((res) => {
 		editorCtx.value = res.context;
+		editorCtx.value.setContents({
+			html: props.modelValue
+		})
 	}).exec();
 	// #endif
 }
-
+const editorFn = (e) => {
+	emits('update:modelValue', e.detail.html)
+}
 const jiacuBtn = () => editorCtx.value.format('bold');
 const xietiBtn = () => editorCtx.value.format('fontStyle', 'italic');
 const bigFontBtn = () => editorCtx.value.format('header', 'h2');
@@ -53,27 +62,36 @@ const insertImage = () => {
 		sizeType: ['compressed'],
 		sourceType: ['album'],
 		success(res) {
-			console.log(res.tempFiles)
+			Array.isArray(res.tempFiles) ? files.value.push(...res.tempFiles) : files.value.push(res.tempFiles);
 			if(Array.isArray(res.tempFilePaths)){
 				res.tempFilePaths.forEach(item => {
 					editorCtx.value.insertImage({
-						src: item
+						src: item,
 					})
 				})
 			}else{
+				files.value.push(res.tempFilePaths)
 				editorCtx.value.insertImage({
-					src: res.tempFilePaths
+					src: res.tempFilePaths,
 				})
 			}
 			
 		}
 	});
-	// editorCtx.value.insertImage({
-	// 	success(e){
-	// 		console.log(e)
-	// 	}
-	// })
 }
+
+const updateImgSrc = () => {
+	console.log(props.modelValue)
+	let imgs = props.modelValue.matchAll(/src="(.*?)"/g);
+	imgs = [...imgs];
+	if(!imgs.length) return;
+	const imgvalues = files.value.filter(item => {
+		const one = imgs.find(img => img[1] == item.path);
+		return one ? true : false;
+	})
+	console.log(imgvalues)
+}
+defineExpose({updateImgSrc})
 </script>
 
 <style lang="scss" scoped>

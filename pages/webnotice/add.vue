@@ -14,7 +14,7 @@
         <uni-datetime-picker return-type="timestamp" v-model="formData.end"></uni-datetime-picker>
       </uni-forms-item>
       <uni-forms-item name="content" label="通知正文" required>
-				<MyEditor />
+				<MyEditor ref="editorRef" v-model="formData.content" />
         <!-- <uni-easyinput placeholder="通知正文内容" v-model="formData.content"></uni-easyinput> -->
       </uni-forms-item>
       <view class="uni-button-group">
@@ -41,23 +41,29 @@
 	}
 	const type_localdata = [{"value": 0, "text": '普通通知'}, {"value": 1, "text": '放假通知'}];
 	const form = ref();
+	const editorRef = ref();
 	const formData = reactive({
 	  title: "",
 	  type: null,
 	  start: null,
 	  end: null,
-	  content: ""
+	  content: "fdsfdsfds<p>fdsfgdshgfdghf</p>"
 	})
 	const rules = ref({...getValidator(Object.keys(formData))});
 	onReady(() => {
 	  form.value.setRules(rules.value)
 	})
 	
-	const submit = () => {
+	const submit = async () => {
+		await editorRef.value.updateImgSrc();
+		
 		uni.showLoading({
 			mask: true
 		})
 		form.value.validate().then(res => {
+			// 先通过myeditor 暴露的 updateImgSrc上传图片，并更新图片链接后再上传
+			
+			console.log(res)
 			// return this.submitForm(res)
 		}).catch(() => {
 		}).finally(() => {
