@@ -83,14 +83,26 @@ const insertImage = () => {
 const updateImgSrc = () => {
 	console.log(props.modelValue)
 	let imgs = props.modelValue.matchAll(/src="(.*?)"/g);
-	imgs = [...imgs];
+	imgs = [...imgs].map(item => item[1]);
 	if(!imgs.length) return;
-	const imgvalues = files.value.filter(item => {
-		const one = imgs.find(img => img[1] == item.path);
-		return one ? true : false;
+	// 将找到的file放进集合，按顺序上传，按顺序替换。
+	let arrFiles = [];
+	for (let img of imgs) {
+		let arrFile = files.value.find(item => `${item.path}` === img);
+		arrFile && arrFiles.push(arrFile)
+	}
+	arrFiles.forEach(item => {
+		console.log(item)
+		uniCloud.uploadFile({
+			filePath: item.path,
+			cloudPath: item.name,
+			success(e) {
+				console.log(e)
+			},
+		})
 	})
-	console.log(imgvalues)
 }
+
 defineExpose({updateImgSrc})
 </script>
 
