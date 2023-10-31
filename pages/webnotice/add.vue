@@ -18,7 +18,7 @@
         <!-- <uni-easyinput placeholder="通知正文内容" v-model="formData.content"></uni-easyinput> -->
       </uni-forms-item>
       <view class="uni-button-group">
-        <button type="primary" class="uni-button" @click="submit">提交</button>
+        <button type="primary" class="uni-button" @click="submit" :disabled="subool">提交</button>
       </view>
     </uni-forms>
 		
@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-	import { reactive, ref } from 'vue';
+	import { reactive, ref, getCurrentInstance } from 'vue';
 	import { onReady } from '@dcloudio/uni-app';
 	import { validator } from '../../js_sdk/validator/webnotice.js';
 	import MyEditor from "../../components/web/my-editor.vue";
@@ -39,11 +39,13 @@
 	  }
 	  return result
 	}
+	const db = uniCloud.importObject('webnotice');
 	const type_localdata = [{"value": 0, "text": '普通通知'}, {"value": 1, "text": '放假通知'}];
 	const form = ref();
 	const editorRef = ref();
+	const subool = ref(false);
 	const formData = reactive({
-	  title: "",
+	  title: "fdsfgdshgfdghf",
 	  type: null,
 	  start: null,
 	  end: null,
@@ -55,19 +57,26 @@
 	})
 	
 	const submit = async () => {
+		subool.value = true;
+		if(formData.content.length < 4){
+			return uni.showToast({
+				title: "正文不能为空",
+				duration: 3000
+			})
+		}
 		await editorRef.value.updateImgSrc();
-		
 		uni.showLoading({
 			mask: true
 		})
-		form.value.validate().then(res => {
+		form.value.validate().then(async (res) => {
 			// 先通过myeditor 暴露的 updateImgSrc上传图片，并更新图片链接后再上传
-			
-			console.log(res)
+			await db.store(res)
+			uni.navigateBack();
 			// return this.submitForm(res)
 		}).catch(() => {
 		}).finally(() => {
-			uni.hideLoading()
+			uni.hideLoading();
+			subool.value = false;
 		})
 	}
 	

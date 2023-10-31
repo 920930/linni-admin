@@ -24,7 +24,8 @@
         </view>
         <view>
           <text>通知正文</text>
-          <text>{{data.content}}</text>
+					<rich-text :nodes="data.content" />
+          <!-- <text v-html="data.content"></text> -->
         </view>
       </view>
     </unicloud-db>

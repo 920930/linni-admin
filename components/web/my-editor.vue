@@ -80,9 +80,8 @@ const insertImage = () => {
 	});
 }
 
-const updateImgSrc = () => {
-	console.log(props.modelValue)
-	let imgs = props.modelValue.matchAll(/src="(.*?)"/g);
+const updateImgSrc = async () => {
+	let imgs = props.modelValue.matchAll(/src="(blob:[^">]+)"/g);
 	imgs = [...imgs].map(item => item[1]);
 	if(!imgs.length) return;
 	// 将找到的file放进集合，按顺序上传，按顺序替换。
@@ -91,16 +90,36 @@ const updateImgSrc = () => {
 		let arrFile = files.value.find(item => `${item.path}` === img);
 		arrFile && arrFiles.push(arrFile)
 	}
-	arrFiles.forEach(item => {
-		console.log(item)
-		uniCloud.uploadFile({
+	const arr = arrFiles.map(item => {
+		return uniCloud.uploadFile({
 			filePath: item.path,
-			cloudPath: item.name,
-			success(e) {
-				console.log(e)
-			},
+			cloudPath: item.name
 		})
 	})
+	try{
+		uni.showLoading({
+			mask: true
+		})
+		const filesFormServer = await Promise.all(arr);
+		let value = props.modelValue;
+		let i = 0;
+		// const regix = /<img[^>]+src="([^">]+)"/;
+		const regix = /src="(blob:[^">]+)"/;
+		while(regix.test(value) && i < filesFormServer.length){
+			value = value.replace(regix, `src="${filesFormServer[i].fileID}"`)
+			i+=1;
+		}
+		emits('update:modelValue', value)
+		editorCtx.value.setContents({
+			html: props.modelValue
+		})
+		uni.hideLoading()
+	}catch(e){
+		uni.showToast({
+			title: e.message,
+		})
+	}
+	files.value.length = 0;
 }
 
 defineExpose({updateImgSrc})
