@@ -165,13 +165,7 @@
 	,{
     "path": "pages/webnotice/add",
     "style": {
-        "navigationBarTitleText": "通知新增"
-    }
-}
-,{
-    "path": "pages/webnotice/edit",
-    "style": {
-        "navigationBarTitleText": "通知编辑"
+        "navigationBarTitleText": "通知增改"
     }
 }
 ,{

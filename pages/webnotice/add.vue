@@ -19,6 +19,7 @@
       </uni-forms-item>
       <view class="uni-button-group">
         <button type="primary" class="uni-button" @click="submit" :disabled="subool">提交</button>
+        <button type="default" class="uni-button" @click="backFn">返回</button>
       </view>
     </uni-forms>
 		
@@ -26,8 +27,8 @@
 </template>
 
 <script setup>
-	import { reactive, ref, getCurrentInstance } from 'vue';
-	import { onReady } from '@dcloudio/uni-app';
+	import { reactive, ref } from 'vue';
+	import { onReady, onLoad } from '@dcloudio/uni-app';
 	import { validator } from '../../js_sdk/validator/webnotice.js';
 	import MyEditor from "../../components/web/my-editor.vue";
 	function getValidator(fields) {
@@ -45,42 +46,55 @@
 	const editorRef = ref();
 	const subool = ref(false);
 	const formData = reactive({
-	  title: "fdsfgdshgfdghf",
-	  type: null,
+		_id: '',
+	  title: "",
+	  type: 1,
 	  start: null,
 	  end: null,
-	  content: "fdsfdsfds<p>fdsfgdshgfdghf</p>"
+	  content: ""
 	})
 	const rules = ref({...getValidator(Object.keys(formData))});
+	
+	onLoad(e => {
+		if(e.id) {
+			formData._id = e.id;
+			getShow(e.id)
+		}
+	})
 	onReady(() => {
 	  form.value.setRules(rules.value)
 	})
+	// 如果_id存在就获取数
+	function getShow(id){
+		db.show(id).then(({data}) => {
+			formData._id = data._id;
+			formData.title = data.title;
+			formData.type = data.type;
+			formData.start = data.start;
+			formData.end = data.end;
+			formData.content = data.content;
+		})
+	}
 	
 	const submit = async () => {
+		uni.$emit('noticeRefresh');
 		subool.value = true;
-		if(formData.content.length < 4){
-			return uni.showToast({
-				title: "正文不能为空",
-				duration: 3000
-			})
-		}
-		await editorRef.value.updateImgSrc();
-		uni.showLoading({
-			mask: true
-		})
 		form.value.validate().then(async (res) => {
-			// 先通过myeditor 暴露的 updateImgSrc上传图片，并更新图片链接后再上传
-			await db.store(res)
-			uni.navigateBack();
-			// return this.submitForm(res)
+			// 先通过myeditor 暴露的 updateValue上传图片，并更新图片链接后再上传
+			res.content = await editorRef.value.updateValue();
+			if(formData._id) {
+				await db.edit(formData._id, res)
+			}else{
+				await db.store(res)
+			}
+			setTimeout(() => uni.navigateBack(), 500)
 		}).catch(() => {
 		}).finally(() => {
-			uni.hideLoading();
 			subool.value = false;
 		})
 	}
 	
-	
+	const backFn = () => uni.navigateBack();
 </script>
 
 <style>
@@ -121,6 +135,7 @@
     display: flex;
     /* #endif */
     justify-content: center;
+		gap: 40rpx;
   }
 
   .uni-button {

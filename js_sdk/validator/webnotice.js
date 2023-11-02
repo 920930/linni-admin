@@ -23,11 +23,11 @@ const validator = {
         "range": [
           {
             "value": 0,
-            "text": 0
+            "text": '普通通知'
           },
           {
             "value": 1,
-            "text": 1
+            "text": '放假通知'
           }
         ]
       }
@@ -41,6 +41,7 @@ const validator = {
         "format": "timestamp"
       }
     ],
+    "title": "开始时间",
     "label": "开始时间"
   },
   "end": {
@@ -55,11 +56,13 @@ const validator = {
   "content": {
     "rules": [
       {
-        "required": true
+        "required": true,
+				"errorMessage": '请输入通知正文',
       },
-      {
-        "format": "string"
-      }
+			{
+				minLength: 10,
+				errorMessage: '通知正文不少于 {minLength} 个字符',
+			}
     ],
     "title": "通知正文",
     "label": "通知正文"

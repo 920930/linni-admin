@@ -1,37 +1,46 @@
 <template>
 	<view class="tools">
-		<uni-icons @click="jiacuBtn" custom-prefix="iconfont" type="icon-zitijiacu" size="20" class="cursor" />
-		<uni-icons @click="xietiBtn" custom-prefix="iconfont" type="icon-zitixieti" size="20" class="cursor" />
-		<uni-icons @click="bigFontBtn" custom-prefix="iconfont" type="icon-formatheader1" size="20" class="cursor" />
-		<uni-icons @click="leftBtn" custom-prefix="iconfont" type="icon-zuoduiqi" size="20" class="cursor" />
-		<uni-icons @click="centerBtn" custom-prefix="iconfont" type="icon-juzhongduiqi" size="20" class="cursor" />
-		<uni-icons @click="rightBtn" custom-prefix="iconfont" type="icon-youduiqi" size="20" class="cursor" />
-		<uni-icons @click="colorBtn" custom-prefix="iconfont" type="icon-text-color" size="20" class="cursor" />
-		<uni-icons @click="bgColorBtn" custom-prefix="iconfont" type="icon-fontbgcolor" size="20" class="cursor" />
-		<uni-icons @click="underlineBtn" custom-prefix="iconfont" type="icon-zitixiahuaxian" size="20" class="cursor" />
-		<uni-icons @click="lineThroughBtn" custom-prefix="iconfont" type="icon-zitishanchuxian" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('bold', 'bold')" custom-prefix="iconfont" type="icon-zitijiacu" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('fontStyle', 'italic')" custom-prefix="iconfont" type="icon-zitixieti" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('header', 'h2')" custom-prefix="iconfont" type="icon-formatheader1" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('align', 'left')" custom-prefix="iconfont" type="icon-zuoduiqi" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('align', 'center')" custom-prefix="iconfont" type="icon-juzhongduiqi" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('align', 'right')" custom-prefix="iconfont" type="icon-youduiqi" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('color', 'white')" custom-prefix="iconfont" type="icon-text-color" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('textDecoration', 'underline')" custom-prefix="iconfont" type="icon-fontbgcolor" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('textDecoration', 'underline')" custom-prefix="iconfont" type="icon-zitixiahuaxian" size="20" class="cursor" />
+		<uni-icons @click="formatBtn('textDecoration', 'line-through')" custom-prefix="iconfont" type="icon-zitishanchuxian" size="20" class="cursor" />
 		<uni-icons @click="dividerBtn" custom-prefix="iconfont" type="icon-fengexian" size="20" class="cursor" />
 		<uni-icons @click="insertImage" custom-prefix="iconfont" type="icon-charutupian" size="20" class="cursor" />
 	</view>
 	<editor
 		id="editor"
 		class="ql-container"
-		@ready="onEditorReady"
 		placeholder="开始输入..."
 		:show-img-size="true"
 		:show-img-toolbar="true"
 		:show-img-resize="true"
-		@input="editorFn"
+		@ready="onEditorReady"
+		@blur="e => editorFn(e.detail.html)"
 	/>
 </template>
 
 <script lang='ts' setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 const props = defineProps(['modelValue'])
 const emits = defineEmits(['update:modelValue'])
 const editorCtx = ref();
 const files = ref([]);
-
+// #ifdef APP-PLUS || H5 ||MP-WEIXIN
+watch(() => props.modelValue, async (newValue) => {
+	const oldValue = await getContent()
+	if(newValue!==oldValue){
+		editorCtx.value.setContents({
+			html: newValue
+		})
+	}
+})
+// #endif
 const onEditorReady = () => {
 	// #ifdef APP-PLUS || H5 ||MP-WEIXIN
 	uni.createSelectorQuery().select('#editor').context((res) => {
@@ -42,20 +51,70 @@ const onEditorReady = () => {
 	}).exec();
 	// #endif
 }
-const editorFn = (e) => {
-	emits('update:modelValue', e.detail.html)
+const editorFn = (html: string) => {
+	emits('update:modelValue', html)
 }
-const jiacuBtn = () => editorCtx.value.format('bold');
-const xietiBtn = () => editorCtx.value.format('fontStyle', 'italic');
-const bigFontBtn = () => editorCtx.value.format('header', 'h2');
-const colorBtn = () => editorCtx.value.format('color', 'white');
-const bgColorBtn = () => editorCtx.value.format('backgroundColor', 'red');
-const leftBtn = () => editorCtx.value.format('align', 'left');
-const centerBtn = () => editorCtx.value.format('align', 'center');
-const rightBtn = () => editorCtx.value.format('align', 'right');
-const underlineBtn = () => editorCtx.value.format('textDecoration', 'underline');
-const lineThroughBtn = () => editorCtx.value.format('textDecoration', 'line-through');
+const formatBtn = (key: string, val: string) => editorCtx.value.format(key, val);
+const getContent = async (): Promise<string> => {
+	return new Promise((resolve) => {
+		editorCtx.value.getContents({
+			success({html}){
+				resolve(html)
+			}
+		});
+	})
+}
 const dividerBtn = () => editorCtx.value.insertDivider();
+const updateValue = async () => {
+	// let valueData = await getContent();
+	let valueData = props.modelValue;
+	const imgMatch = valueData.matchAll(/src="(blob:[^">]+)"/g);
+	const imgs = [...imgMatch].map(item => item[1]);
+	if(!imgs.length){
+		return valueData;
+	};
+	// 将找到的file放进集合，按顺序上传，按顺序替换。
+	let arrFiles = [];
+	for (let img of imgs) {
+		let arrFile = files.value.find(item => `${item.path}` === img);
+		arrFile && arrFiles.push(arrFile)
+	}
+	const arr = arrFiles.map(item => {
+		return uniCloud.uploadFile({
+			filePath: item.path,
+			cloudPath: item.name
+		})
+	})
+	try{
+		uni.showLoading({
+			mask: true
+		})
+		const filesFormServer = await Promise.all(arr);
+		let i = 0;
+		// const regix = /<img[^>]+src="([^">]+)"/;
+		const regix = /src="(blob:[^">]+)"/;
+		while(regix.test(valueData) && i < filesFormServer.length){
+			valueData = valueData.replace(regix, `src="${filesFormServer[i].fileID}"`)
+			i+=1;
+		}
+		// #ifdef APP-PLUS || H5 ||MP-WEIXIN
+		// emits('update:modelValue', value)
+		editorCtx.value.setContents({
+			html: valueData
+		})
+		// #endif
+	}catch(e){
+		uni.showToast({
+			title: e.message,
+		})
+	}finally{
+		uni.hideLoading()
+	}
+	files.value.length = 0;
+	// emits('update:modelValue', valueData)
+	return valueData;
+}
+
 const insertImage = () => {
 	uni.chooseImage({
 		count: 2, //默认9
@@ -80,49 +139,7 @@ const insertImage = () => {
 	});
 }
 
-const updateImgSrc = async () => {
-	let imgs = props.modelValue.matchAll(/src="(blob:[^">]+)"/g);
-	imgs = [...imgs].map(item => item[1]);
-	if(!imgs.length) return;
-	// 将找到的file放进集合，按顺序上传，按顺序替换。
-	let arrFiles = [];
-	for (let img of imgs) {
-		let arrFile = files.value.find(item => `${item.path}` === img);
-		arrFile && arrFiles.push(arrFile)
-	}
-	const arr = arrFiles.map(item => {
-		return uniCloud.uploadFile({
-			filePath: item.path,
-			cloudPath: item.name
-		})
-	})
-	try{
-		uni.showLoading({
-			mask: true
-		})
-		const filesFormServer = await Promise.all(arr);
-		let value = props.modelValue;
-		let i = 0;
-		// const regix = /<img[^>]+src="([^">]+)"/;
-		const regix = /src="(blob:[^">]+)"/;
-		while(regix.test(value) && i < filesFormServer.length){
-			value = value.replace(regix, `src="${filesFormServer[i].fileID}"`)
-			i+=1;
-		}
-		emits('update:modelValue', value)
-		editorCtx.value.setContents({
-			html: props.modelValue
-		})
-		uni.hideLoading()
-	}catch(e){
-		uni.showToast({
-			title: e.message,
-		})
-	}
-	files.value.length = 0;
-}
-
-defineExpose({updateImgSrc})
+defineExpose({updateValue})
 </script>
 
 <style lang="scss" scoped>
