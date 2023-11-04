@@ -21,7 +21,7 @@
 		:show-img-toolbar="true"
 		:show-img-resize="true"
 		@ready="onEditorReady"
-		@blur="e => editorFn(e.detail.html)"
+		@blur="e => blurFn(e.detail.html)"
 	/>
 </template>
 
@@ -51,10 +51,10 @@ const onEditorReady = () => {
 	}).exec();
 	// #endif
 }
-const editorFn = (html: string) => {
-	emits('update:modelValue', html)
-}
+const blurFn = (html: string) => emits('update:modelValue', html);
 const formatBtn = (key: string, val: string) => editorCtx.value.format(key, val);
+const dividerBtn = () => editorCtx.value.insertDivider();
+
 const getContent = async (): Promise<string> => {
 	return new Promise((resolve) => {
 		editorCtx.value.getContents({
@@ -64,9 +64,7 @@ const getContent = async (): Promise<string> => {
 		});
 	})
 }
-const dividerBtn = () => editorCtx.value.insertDivider();
 const updateValue = async () => {
-	// let valueData = await getContent();
 	let valueData = props.modelValue;
 	const imgMatch = valueData.matchAll(/src="(blob:[^">]+)"/g);
 	const imgs = [...imgMatch].map(item => item[1]);

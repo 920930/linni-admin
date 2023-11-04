@@ -46,8 +46,8 @@
 					<uni-tr v-for="(item,index) in data" :key="index">
 						<uni-td align="center">{{item.title}}</uni-td>
 						<uni-td align="center">{{item.type ? '放假通知' : '普通通知'}}</uni-td>
-						<uni-td align="center">{{item.start}}</uni-td>
-						<uni-td align="center">{{item.end}}</uni-td>
+						<uni-td align="center"><uni-dateformat :date="item.start" /></uni-td>
+						<uni-td align="center"><uni-dateformat :date="item.end" /></uni-td>
 						<uni-td align="center">
 							<view class="uni-group">
 								<button @click="navigateTo(item._id)" class="uni-button" size="mini"
