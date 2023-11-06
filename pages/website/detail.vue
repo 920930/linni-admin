@@ -15,6 +15,7 @@
 				<uni-tag :text="`时间: ${item.start} - ${item.end} 车辆量: ${item.num}`" inverted v-for="item in site.times" :key="item.id" />
 			</view>
 		</view>
+		<view class="site-border"><text>可预约天数：</text>{{site.day}}天</view>
 		<view class="site-border">
 			<text>月台编号</text>
 			<view class="site-flex" style="margin-top: 20rpx;">

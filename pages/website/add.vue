@@ -17,6 +17,9 @@
 				</view>
 				<view v-model="formData.genre" />
       </uni-forms-item>
+      <uni-forms-item name="day" label="未来预约" required>
+        <uni-number-box v-model="formData.day" />
+      </uni-forms-item>
       <uni-forms-item name="times" label="开放时间">
 				<button type="primary" size="mini" @tap="editTimeFn(0)" style="margin-bottom: 20rpx;">添加时间</button>
 				<view class="timelist">
@@ -73,6 +76,7 @@
 		title: "",
 		ftitle: "",
 		mobile: "",
+		day: 5,
 		genre: [],
 		times: [],
 		doors: []
