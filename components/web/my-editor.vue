@@ -23,14 +23,19 @@
 		@ready="onEditorReady"
 		@blur="e => blurFn(e.detail.html)"
 	/>
+	<!-- <canvas canvas-id="myCanvas" type="2d" :style="`width: ${canvasStyle.width}px; height: ${canvasStyle.height}px`" /> -->
 </template>
 
 <script lang='ts' setup>
 import { ref, watch } from 'vue';
+// #ifdef H5
+import { tinyCanvas } from "./tinyCanvas.js";
+// #endif
 const props = defineProps(['modelValue'])
 const emits = defineEmits(['update:modelValue'])
 const editorCtx = ref();
 const files = ref([]);
+
 // #ifdef APP-PLUS || H5 ||MP-WEIXIN
 watch(() => props.modelValue, async (newValue) => {
 	const oldValue = await getContent()
@@ -64,6 +69,10 @@ const getContent = async (): Promise<string> => {
 		});
 	})
 }
+// const canvasStyle = reactive({
+// 	width: 750,
+// 	height: 1060
+// })
 const updateValue = async () => {
 	let valueData = props.modelValue;
 	const imgMatch = valueData.matchAll(/src="(blob:[^">]+)"/g);
@@ -77,12 +86,20 @@ const updateValue = async () => {
 		let arrFile = files.value.find(item => `${item.path}` === img);
 		arrFile && arrFiles.push(arrFile)
 	}
-	const arr = arrFiles.map(item => {
+	const canvas = document.createElement('canvas');
+	const ctx = canvas.getContext('2d');
+	
+	const arr = arrFiles.map(async (item) => {
+		let path = item.path;
+		// #ifdef H5
+		path = await tinyCanvas(item);
+		// #endif
 		return uniCloud.uploadFile({
-			filePath: item.path,
+			filePath: path,
 			cloudPath: item.name
 		})
-	})
+	});
+
 	try{
 		uni.showLoading({
 			mask: true
@@ -132,7 +149,6 @@ const insertImage = () => {
 					src: res.tempFilePaths,
 				})
 			}
-			
 		}
 	});
 }
