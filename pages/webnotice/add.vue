@@ -7,11 +7,19 @@
       <uni-forms-item name="type" label="通知类型">
         <uni-data-checkbox v-model="formData.type" :localdata="type_localdata"></uni-data-checkbox>
       </uni-forms-item>
-      <uni-forms-item name="start" label="开始时间">
-        <uni-datetime-picker return-type="timestamp" v-model="formData.start"></uni-datetime-picker>
+      <uni-forms-item name="start" label="开始时间" style="display: flex; align-items: center;" v-if="formData.type">
+				<picker mode="date" :value="numToTime(formData.start)" @change="e => pickerTime('start', e.detail.value)">
+					<view style="border: 1rpx rgba(0, 0, 0, 0.1) solid; padding: 17rpx;">
+						<uni-dateformat :date="numToTime(formData.start)" format="yyyy-MM-dd" />
+					</view>
+				</picker>
       </uni-forms-item>
-      <uni-forms-item name="end" label="结束时间">
-        <uni-datetime-picker return-type="timestamp" v-model="formData.end"></uni-datetime-picker>
+      <uni-forms-item name="end" label="结束时间" style="display: flex; align-items: center;" v-if="formData.type">
+				<picker mode="date" :value="numToTime(formData.end)" @change="e => pickerTime('end', e.detail.value)">
+					<view style="border: 1rpx rgba(0, 0, 0, 0.1) solid; padding: 17rpx;">
+						<uni-dateformat :date="numToTime(formData.end)" format="yyyy-MM-dd" />
+					</view>
+				</picker>
       </uni-forms-item>
       <uni-forms-item name="content" label="通知正文" required>
 				<MyEditor ref="editorRef" v-model="formData.content" />
@@ -31,6 +39,7 @@
 	import { onReady, onLoad } from '@dcloudio/uni-app';
 	import { validator } from '../../js_sdk/validator/webnotice.js';
 	import MyEditor from "../../components/web/my-editor.vue";
+	
 	function getValidator(fields) {
 	  let result = {}
 	  for (let key in validator) {
@@ -49,8 +58,8 @@
 		_id: '',
 	  title: "",
 	  type: 1,
-	  start: null,
-	  end: null,
+	  start: initTime('start'),
+	  end: initTime('end'),
 	  content: ""
 	})
 	const rules = ref({...getValidator(Object.keys(formData))});
@@ -64,6 +73,18 @@
 	onReady(() => {
 	  form.value.setRules(rules.value)
 	})
+	function initTime(type, num = Date.now()){
+		const time = new Date(num);
+		type === 'start' ? time.setHours(0,0,0) : time.setHours(23,59,59,999);
+		return time.getTime();
+	}
+	function numToTime(num) {
+		const time = new Date(num);
+		const year = time.getFullYear()
+		const month = time.getMonth() + 1;
+		const date = time.getDate();
+		return `${year}-${month}-${date}`;
+	}
 	// 如果_id存在就获取数
 	function getShow(id){
 		db.show(id).then(({data}) => {
@@ -93,7 +114,7 @@
 			subool.value = false;
 		})
 	}
-	
+	const pickerTime = (val, time) => formData[val] = initTime(val, time);
 	const backFn = () => uni.navigateBack();
 </script>
 

@@ -23,12 +23,12 @@
       <uni-forms-item name="times" label="开放时间">
 				<button type="primary" size="mini" @tap="editTimeFn(0)" style="margin-bottom: 20rpx;">添加时间</button>
 				<view class="timelist">
-					<view class="timelist-item" v-for="item in formData.times" :key="item.id">
+					<view class="timelist-item" v-for="item in formData.times" :key="item.startMins">
 						<uni-tag :text="`时间: ${item.start} - ${item.end}`" inverted type="primary" />
 						<uni-tag :text="`车辆量: ${item.num}`" inverted type="success" />
 						<view class="timelist-item-r">
-							<uni-icons type="compose" size="20" style="cursor: pointer;" @click="editTimeFn(item.id)" />
-							<uni-icons type="trash" size="20" style="cursor: pointer;" @click="delTimeFn(item.id)" />
+							<uni-icons type="compose" size="20" style="cursor: pointer;" @click="editTimeFn(item.startMins)" />
+							<uni-icons type="trash" size="20" style="cursor: pointer;" @click="delTimeFn(item.startMins)" />
 						</view>
 					</view>
 				</view>
@@ -82,11 +82,10 @@
 		doors: []
 	});
 	const editTime = reactive({
-		id: 0,
+		startMins: 0,
 		start: '09:00',
 		end: '10:00',
 		num: 10,
-		order: 0,
 	});
 	const editDoor = reactive({
 		id: 0,
@@ -94,14 +93,16 @@
 		state: 1
 	})
 	const editTimeFn = id => {
+		// 新增，复原数据
 		if(id === 0){
-			editTime.id = Date.now();
+			editTime.startMins = 0;
 			editTime.start = '09:00';
 			editTime.end = '10:00';
 			editTime.num = 10;
 		} else {
-			const one = formData.times.find(item => item.id === id);
-			editTime.id = id;
+			// 编辑
+			const one = formData.times.find(item => item.startMins === id);
+			editTime.startMins = id;
 			editTime.start = one.start;
 			editTime.end = one.end;
 			editTime.num = one.num;
@@ -150,31 +151,45 @@
 	})
 	
 	const pushTime = e => {
-		let one = formData.times.find(item => item.id === e.id);
-		let two = formData.times.find(item => item.start === e.start);
-		if(one){
-			if(two && one.id != two.id) {
+		// 注意e.startMins 可能为 0，后面修正
+		const one = formData.times.find(item => item.start === e.start);
+		// 新增
+		if(e.startMins === 0) {
+			if(one) {
 				return uni.showToast({
 					title: "开始时间已存在",
 					icon: "none",
 					duration: 3000,
 				})
 			}
-			one.start = e.start;
-			one.end = e.end;
-			one.num = e.num;
-			one.order = e.order;
-		} else {
-			if(two) {
-				return uni.showToast({
-					title: "开始时间已存在",
-					icon: "none",
-					duration: 3000,
-				})
-			}
+			const date = new Date();
+			const arr = e.start.split(':');
+			const timeStart = date.setHours(arr[0]-0, arr[1]-0, 0);
+			const dayStart = date.setHours(0, 0, 0);
+			e.startMins = timeStart - dayStart;
 			formData.times.push({...e})
+		}else{
+			// 编辑
+			const me = formData.times.find(item => item.startMins === e.startMins);
+			if(one) {
+				if(me.startMins !== one.startMins){
+					return uni.showToast({
+						title: "开始时间已存在",
+						icon: "none",
+						duration: 3000,
+					})
+				}
+			}
+			me.start = e.start;
+			me.end = e.end;
+			me.num = e.num;
+			const date = new Date();
+			const arr = e.start.split(':');
+			const timeStart = date.setHours(arr[0]-0, arr[1]-0, 0);
+			const dayStart = date.setHours(0, 0, 0);
+			me.startMins = timeStart - dayStart;
 		}
-		formData.times.sort((a, b) => a.order - b.order);
+		formData.times.sort((a, b) => a.startMins - b.startMins);
 	}
 	const pushDoor = (e) => {
 		const one = formData.doors.find(door => door.id === e.id);
@@ -229,7 +244,7 @@
 			title: '确认删除吗',
 			success(e) {
 				if(e.confirm) {
-					formData.times = formData.times.filter(item => item.id !== id)
+					formData.times = formData.times.filter(item => item.startMins !== id)
 				}
 			}
 		})

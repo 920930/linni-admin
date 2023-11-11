@@ -20,29 +20,26 @@
 <script setup>
 	import { reactive, ref, computed, watch } from 'vue';
 	const props = defineProps({
-		id: Number,
 		start: String,
 		end: String,
 		num: Number,
-		order: Number,
+		startMins: Number,
 	})
 	const emits = defineEmits(['pushTime']);
 	const popup = ref();
 	const time = reactive({
-		id: props.id,
 		start: props.start,
 		end: props.end,
 		num: props.num,
-		order: props.order,
+		startMins: props.startMins,
 	})
 	watch(props, ret => {
-		time.id = ret.id;
 		time.start = ret.start;
 		time.end = ret.end;
 		time.num = ret.num;
-		time.order = ret.order;
+		time.startMins = ret.startMins;
 	})
-	
+
 	const startChange = e => time.start = e.detail.value;
 	const endChange = e => time.end = e.detail.value;
 	const nowFn = () => Date.now();
@@ -54,7 +51,6 @@
 				duration: 3000
 			})
 		}
-		time.order = time.start.slice(0, 2) - 0;
 		emits('pushTime', time);
 		popup.value.close();
 	}
