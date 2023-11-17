@@ -87,6 +87,7 @@
 	});
 	const editTime = reactive({
 		startMins: 0,
+		endMins: 0,
 		start: '09:00',
 		end: '10:00',
 		num: 10,
@@ -99,12 +100,14 @@
 	const editTimeFn = id => {
 		if(id === 0){
 			editTime.startMins = 0;
+			editTime.endMins = 0;
 			editTime.start = '09:00';
 			editTime.end = '10:00';
 			editTime.num = 10;
 		} else {
 			const one = formData.times.find(item => item.startMins === id);
 			editTime.startMins = id;
+			editTime.endMins = one.endMins;
 			editTime.start = one.start;
 			editTime.end = one.end;
 			editTime.num = one.num;
@@ -122,19 +125,28 @@
 		}
 		doorpickRef.value.popup.open();
 	}
-	const submit = () => {
-		uni.showLoading({
-			title: '更改中...'
+	const submit = async () => {
+		// uni.showLoading({
+		// 	title: '更改中...'
+		// })
+		try{
+			const res = await form.value.validate();
+			res._id ? db.update(res) : db.store(res);
+		}catch(e){
+			//TODO handle the exception
+			console.log(e)
+			return;
+		}
+		// uni.hideLoading();
+		uni.navigateTo({
+			url: '/pages/website/list'
 		})
-		form.value.validate().then((res) => {
-			return db.update(res)
-		}).catch(() => {
-		}).finally(() => {
-			uni.hideLoading();
-			uni.navigateTo({
-				url: '/pages/website/list'
-			})
-		})
+		// form.value.validate().then((res) => {
+		// 	return res._id ? db.update(res) : db.store(res)
+		// }).catch(() => {
+		// }).finally(() => {
+		// 	uni.hideLoading();
+		// })
 	}
 	
 	function getValidator(fields) {
@@ -157,7 +169,8 @@
 		formData.doors = data.doors;
 	}
 	onLoad(e => {
-		if(e.id) getSite(e.id)
+		if(e.id !== '0') getSite(e.id)
+		else formData._id = '0';
 	})
 	const rules = ref({...getValidator(Object.keys(formData))});
 	onReady(() => {
@@ -165,6 +178,10 @@
 	})
 	
 	const pushTime = e => {
+		// const timeOne = formData.times.find(item => {
+		// 	return (item.startMins <= e.startMins && item.endMins => e.endMins)
+		// 		|| ()
+		// })
 		// 注意e.startMins 可能为 0，后面修正
 		const one = formData.times.find(item => item.start === e.start);
 		// 新增
@@ -177,10 +194,13 @@
 				})
 			}
 			const date = new Date();
-			const arr = e.start.split(':');
-			const timeStart = date.setHours(arr[0]-0, arr[1]-0, 0);
+			const arrStart = e.start.split(':');
+			const arrEnd = e.end.split(':');
+			const timeStart = date.setHours(arrStart[0]-0, arrStart[1]-0, 0);
+			const timeEnd = date.setHours(arrEnd[0]-0, arrEnd[1]-0, 0);
 			const dayStart = date.setHours(0, 0, 0);
 			e.startMins = timeStart - dayStart;
+			e.endMins = timeEnd - dayStart;
 			formData.times.push({...e})
 		}else{
 			// 编辑
@@ -198,10 +218,13 @@
 			me.end = e.end;
 			me.num = e.num;
 			const date = new Date();
-			const arr = e.start.split(':');
-			const timeStart = date.setHours(arr[0]-0, arr[1]-0, 0);
+			const arrStart = e.start.split(':');
+			const arrEnd = e.end.split(':');
+			const timeStart = date.setHours(arrStart[0]-0, arrStart[1]-0, 0);
+			const timeEnd = date.setHours(arrEnd[0]-0, arrEnd[1]-0, 0);
 			const dayStart = date.setHours(0, 0, 0);
 			me.startMins = timeStart - dayStart;
+			me.endMins = timeEnd - dayStart;
 		}
 		formData.times.sort((a, b) => a.startMins - b.startMins);
 	}

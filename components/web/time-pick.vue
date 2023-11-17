@@ -24,6 +24,7 @@
 		end: String,
 		num: Number,
 		startMins: Number,
+		endMins: Number,
 	})
 	const emits = defineEmits(['pushTime']);
 	const popup = ref();
@@ -32,12 +33,14 @@
 		end: props.end,
 		num: props.num,
 		startMins: props.startMins,
+		endMins: props.endMins,
 	})
 	watch(props, ret => {
 		time.start = ret.start;
 		time.end = ret.end;
 		time.num = ret.num;
 		time.startMins = ret.startMins;
+		time.endMins = ret.endMins;
 	})
 
 	const startChange = e => time.start = e.detail.value;
