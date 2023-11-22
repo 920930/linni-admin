@@ -142,11 +142,6 @@
 				"navigationBarTitleText": "实名认证"
 			}
 		}, {
-			"path": "pages/website/add",
-			"style": {
-				"navigationBarTitleText": "网站新增"
-			}
-		}, {
 			"path": "pages/website/edit",
 			"style": {
 				"navigationBarTitleText": "网站编辑"
